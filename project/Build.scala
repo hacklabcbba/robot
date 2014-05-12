@@ -13,7 +13,8 @@ object LiftProjectBuild extends Build {
         "net.liftweb" %% "lift-mongodb-record" % Ver.lift % "compile",
         "net.liftmodules" %% ("mongoauth_"+Ver.lift_edition) % "0.4" % "compile",
         "net.liftmodules" %% ("extras_"+Ver.lift_edition) % "0.3" % "compile",
-        "org.eclipse.jetty" % "jetty-webapp" % Ver.jetty % "container",
+        "org.eclipse.jetty" % "jetty-webapp" % Ver.jetty % "container, compile",
+        "org.eclipse.jetty" % "jetty-plus"   % Ver.jetty % "container, compile",
         "ch.qos.logback" % "logback-classic" % "1.0.13" % "compile",
         "org.scalatest" %% "scalatest" % "1.9.2" % "test",
         "com.foursquare" %% "rogue-lift" % "2.2.0",
@@ -22,4 +23,4 @@ object LiftProjectBuild extends Build {
         "org.scalaj" % "scalaj-time_2.10.2" % "0.7"
       )
     )
-}
+  }

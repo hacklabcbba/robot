@@ -1,6 +1,8 @@
 import sbt._
 import sbt.Keys._
 
+import sbtassembly.Plugin._
+import AssemblyKeys._
 import com.earldouglas.xsbtwebplugin.WebPlugin.{container, webSettings}
 import com.earldouglas.xsbtwebplugin.PluginKeys._
 import sbtbuildinfo.Plugin._
@@ -31,10 +33,24 @@ object BuildSettings {
     resolvers += "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases"
   )
 
+  val assemblyCommonSettings = Seq(
+    test in assembly := {},
+    mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) => {
+      case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+      case PathList(xs @ _*) if xs.last == "ECLIPSEF.RSA" => MergeStrategy.discard
+      case PathList(xs @ _*) if xs.last == "mailcap" => MergeStrategy.first
+      case PathList(xs @ _*) if xs.last == "mimetypes.default" => MergeStrategy.first
+      case PathList(xs @ _*)  => MergeStrategy.last
+      case x => old(x)
+    }}
+  )
+
   val liftAppSettings = basicSettings ++
     webSettings ++
     buildInfoSettings ++
     lessSettings ++
+    assemblySettings ++ 
+    assemblyCommonSettings ++
     closureSettings ++
     seq(
       buildTime := System.currentTimeMillis.toString,
@@ -50,8 +66,17 @@ object BuildSettings {
 
       // closure
       (ClosureKeys.prettyPrint in (Compile, ClosureKeys.closure)) := false,
-
       // add managed resources, where less and closure publish to, to the webapp
+      resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map{ (managedBase, base) =>
+        val webappBase = base / "target" / "webapp"   //base / "src" / "main" / "webapp"
+        for {
+          (from, to) <- webappBase ** "*" x rebase(webappBase, managedBase /
+            "main" / "webapp")
+        } yield {
+          Sync.copy(from, to)
+          to
+        }
+      },
       (webappResources in Compile) <+= (resourceManaged in Compile)
     )
 
